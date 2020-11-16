@@ -9,6 +9,10 @@ type distributorChannels struct {
 // distributor divides the work between workers and interacts with other goroutines.
 func distributor(p Params, c distributorChannels) {
 
+	world := make([][]bool, p.ImageWidth)
+	for x := range world{
+		world[x] = make([]bool, p.ImageHeight)
+	}
 	// TODO: Create a 2D slice to store the world.
 	// TODO: For all initially alive cells send a CellFlipped Event.
 
@@ -17,6 +21,9 @@ func distributor(p Params, c distributorChannels) {
 	// TODO: Execute all turns of the Game of Life.
 	// TODO: Send correct Events when required, e.g. CellFlipped, TurnComplete and FinalTurnComplete.
 	//		 See event.go for a list of all events.
+	for i := 0; i < p.Turns; i++ {
+
+	}
 
 	// Make sure that the Io has finished any output before exiting.
 	c.ioCommand <- ioCheckIdle
