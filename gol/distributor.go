@@ -1,5 +1,11 @@
 package gol
 
+import (
+	"fmt"
+
+	"uk.ac.bris.cs/gameoflife/util"
+)
+
 type distributorChannels struct {
 	events    chan<- Event
 	ioCommand chan<- ioCommand
@@ -9,21 +15,20 @@ type distributorChannels struct {
 // distributor divides the work between workers and interacts with other goroutines.
 func distributor(p Params, c distributorChannels) {
 
-	world := make([][]bool, p.ImageWidth)
-	for x := range world{
-		world[x] = make([]bool, p.ImageHeight)
+	world := newWorld(p)
+	cells := util.ReadAliveCells(fmt.Sprintf("images/%dx%d.pgm", p.ImageWidth, p.ImageHeight), p.ImageWidth, p.ImageHeight)
+	for _, cell := range cells {
+		world[cell.Y][cell.X] = true
+		c.events <- CellFlipped{Cell: cell, CompletedTurns: 0}
 	}
-	// TODO: Create a 2D slice to store the world.
-	// TODO: For all initially alive cells send a CellFlipped Event.
 
 	turn := 0
-
-	// TODO: Execute all turns of the Game of Life.
-	// TODO: Send correct Events when required, e.g. CellFlipped, TurnComplete and FinalTurnComplete.
-	//		 See event.go for a list of all events.
-	for i := 0; i < p.Turns; i++ {
-
+	for turn = 0; turn < p.Turns; turn++ {
+		world = executor(p, c, turn, world)
+		// 1st turn completes when i = 0, etc.
+		c.events <- TurnComplete{turn + 1}
 	}
+	c.events <- FinalTurnComplete{Alive: calculateAliveCells(p, world), CompletedTurns: i}
 
 	// Make sure that the Io has finished any output before exiting.
 	c.ioCommand <- ioCheckIdle
@@ -32,4 +37,12 @@ func distributor(p Params, c distributorChannels) {
 	c.events <- StateChange{turn, Quitting}
 	// Close the channel to stop the SDL goroutine gracefully. Removing may cause deadlock.
 	close(c.events)
+}
+
+func newWorld(p Params) [][]bool {
+	world := make([][]bool, p.ImageHeight)
+	for x := range world {
+		world[x] = make([]bool, p.ImageWidth)
+	}
+	return world
 }
