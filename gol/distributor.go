@@ -16,7 +16,6 @@ type distributorChannels struct {
 }
 
 type executorParams struct {
-	p    Params
 	c    distributorChannels
 	turn int
 }
@@ -39,9 +38,11 @@ func distributor(p Params, c distributorChannels) {
 
 	turn := 0
 	for turn = 0; turn < p.Turns; turn++ {
-		execParam := executorParams{p, c, turn}
+		nextWorld := newWorld(p)
+		execParam := executorParams{c, turn}
+		executor(execParam, 0, 0, p.ImageWidth, p.ImageHeight, world, nextWorld)
+		world = nextWorld
 
-		world = executor(execParam, 0, 0, p.ImageWidth, p.ImageHeight, world)
 		// 1st turn completes when i = 0, etc.
 		c.events <- TurnComplete{turn + 1}
 	}

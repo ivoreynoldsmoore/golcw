@@ -38,9 +38,7 @@ func findAliveNeighbours(world [][]bool, x int, y int) int {
 }
 
 // Perform one iteration of the game of life on the argument world
-func executor(par executorParams, sx, sy, dx, dy int, world [][]bool) [][]bool {
-	nextWorld := newWorld(par.p)
-
+func executor(par executorParams, sx, sy, dx, dy int, world, nextWorld [][]bool) [][]bool {
 	for y, col := range world {
 		for x, val := range col {
 			cell := util.Cell{X: x, Y: y}
