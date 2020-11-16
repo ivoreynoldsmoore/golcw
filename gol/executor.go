@@ -38,8 +38,8 @@ func findAliveNeighbours(world [][]bool, x int, y int) int {
 }
 
 // Perform one iteration of the game of life on the argument world
-func executor(p Params, c distributorChannels, turns int, world [][]bool) [][]bool {
-	nextWorld := newWorld(p)
+func executor(par executorParams, sx, sy, dx, dy int, world [][]bool) [][]bool {
+	nextWorld := newWorld(par.p)
 
 	for y, col := range world {
 		for x, val := range col {
@@ -50,11 +50,11 @@ func executor(p Params, c distributorChannels, turns int, world [][]bool) [][]bo
 				nextWorld[y][x] = true
 			} else if !val && aliveNeighbors == 3 {
 				nextWorld[y][x] = true
-				c.events <- CellFlipped{Cell: cell, CompletedTurns: turns}
+				par.c.events <- CellFlipped{Cell: cell, CompletedTurns: par.turn}
 			} else if val {
 				// No need to change dead cells, all cells are dead by default
 				nextWorld[y][x] = false
-				c.events <- CellFlipped{Cell: cell, CompletedTurns: turns}
+				par.c.events <- CellFlipped{Cell: cell, CompletedTurns: par.turn}
 			}
 		}
 	}

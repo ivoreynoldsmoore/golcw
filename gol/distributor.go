@@ -7,28 +7,45 @@ import (
 )
 
 type distributorChannels struct {
-	events    chan<- Event
-	ioCommand chan<- ioCommand
-	ioIdle    <-chan bool
+	events     chan<- Event
+	ioCommand  chan<- ioCommand
+	ioIdle     <-chan bool
+	ioFilename chan<- string
+	ioInput    <-chan uint8
+	ioOutput   chan<- uint8
+}
+
+type executorParams struct {
+	p    Params
+	c    distributorChannels
+	turn int
 }
 
 // distributor divides the work between workers and interacts with other goroutines.
 func distributor(p Params, c distributorChannels) {
 
 	world := newWorld(p)
-	cells := util.ReadAliveCells(fmt.Sprintf("images/%dx%d.pgm", p.ImageWidth, p.ImageHeight), p.ImageWidth, p.ImageHeight)
-	for _, cell := range cells {
-		world[cell.Y][cell.X] = true
-		c.events <- CellFlipped{Cell: cell, CompletedTurns: 0}
+	c.ioCommand <- ioInput
+	c.ioFilename <- fmt.Sprintf("%dx%d", p.ImageWidth, p.ImageHeight)
+	for y := 0; y < p.ImageHeight; y++ {
+		for x := 0; x < p.ImageWidth; x++ {
+			world[y][x] = <-c.ioInput != 0
+			// If it's true, we've flipped it
+			if world[y][x] {
+				c.events <- CellFlipped{Cell: util.Cell{X: x, Y: y}, CompletedTurns: 0}
+			}
+		}
 	}
 
 	turn := 0
 	for turn = 0; turn < p.Turns; turn++ {
-		world = executor(p, c, turn, world)
+		execParam := executorParams{p, c, turn}
+
+		world = executor(execParam, 0, 0, p.ImageWidth, p.ImageHeight, world)
 		// 1st turn completes when i = 0, etc.
 		c.events <- TurnComplete{turn + 1}
 	}
-	c.events <- FinalTurnComplete{Alive: calculateAliveCells(p, world), CompletedTurns: i}
+	c.events <- FinalTurnComplete{Alive: calculateAliveCells(p, world), CompletedTurns: turn}
 
 	// Make sure that the Io has finished any output before exiting.
 	c.ioCommand <- ioCheckIdle
