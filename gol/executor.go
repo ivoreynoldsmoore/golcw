@@ -4,7 +4,7 @@ import (
 	"uk.ac.bris.cs/gameoflife/util"
 )
 
-func calculateAliveCells(p Params, world [][]bool) []util.Cell {
+func calculateAliveCells(world [][]bool) []util.Cell {
 	cells := []util.Cell{}
 	for y, col := range world {
 		for x, v := range col {
@@ -39,6 +39,7 @@ func findAliveNeighbours(world [][]bool, x int, y int) int {
 
 // Perform one iteration of the game of life on the argument world
 func executor(par executorParams, sx, sy, dx, dy int, world, nextWorld [][]bool) [][]bool {
+	defer par.wg.Done()
 	for y := sy; y < sy+dy; y++ {
 		for x := sx; x < sx+dx; x++ {
 			val := world[y][x]
