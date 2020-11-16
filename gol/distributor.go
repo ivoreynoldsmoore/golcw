@@ -40,7 +40,9 @@ func distributor(p Params, c distributorChannels) {
 	for turn = 0; turn < p.Turns; turn++ {
 		nextWorld := newWorld(p)
 		execParam := executorParams{c, turn}
-		executor(execParam, 0, 0, p.ImageWidth, p.ImageHeight, world, nextWorld)
+		for i := 0; i < p.Threads; i++ {
+			go executor(execParam, 0, 0, p.ImageWidth, p.ImageHeight, world, nextWorld)
+		}
 		world = nextWorld
 
 		// 1st turn completes when i = 0, etc.
