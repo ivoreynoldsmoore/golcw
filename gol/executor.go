@@ -1,8 +1,16 @@
 package gol
 
 import (
+	"sync"
+
 	"uk.ac.bris.cs/gameoflife/util"
 )
+
+type executorParams struct {
+	c    distributorChannels
+	wg   *sync.WaitGroup
+	turn int
+}
 
 func calculateAliveCells(world [][]bool) []util.Cell {
 	cells := []util.Cell{}
