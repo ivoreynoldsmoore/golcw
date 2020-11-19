@@ -24,7 +24,7 @@ func calculateAliveCells(world [][]bool) []util.Cell {
 	return cells
 }
 
-func findAliveNeighbours(world [][]bool, x int, y int) int {
+func FindAliveNeighbours(world [][]bool, x int, y int) int {
 	aliveNeighbours := 0
 	for _, i := range []int{-1, 0, 1} {
 		for _, j := range []int{-1, 0, 1} {
@@ -52,7 +52,7 @@ func executor(par executorParams, sx, sy, dx, dy int, world, nextWorld [][]bool)
 		for x := sx; x < sx+dx; x++ {
 			val := world[y][x]
 			cell := util.Cell{X: x, Y: y}
-			aliveNeighbors := findAliveNeighbours(world, x, y)
+			aliveNeighbors := FindAliveNeighbours(world, x, y)
 
 			if val && (aliveNeighbors == 2 || aliveNeighbors == 3) {
 				nextWorld[y][x] = true
