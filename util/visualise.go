@@ -5,6 +5,21 @@ import (
 	"strings"
 )
 
+func VisualiseBooleanMatrix(given [][]bool, width, height int) {
+	newGiven := make([][]uint8, height)
+	for y, col := range given {
+		newGiven[y] = make([]uint8, width)
+		for x, val := range col {
+			if val {
+				newGiven[y][x] = 255
+			} else {
+				newGiven[y][x] = 0
+			}
+		}
+	}
+	VisualiseMatrix(newGiven, width, height)
+}
+
 func VisualiseMatrix(given [][]uint8, width, height int) {
 	fmt.Print(matricesToString(given, nil, width, height))
 }
@@ -81,7 +96,7 @@ func squaresToStrings(given, expected [][]uint8, width, height int) []string {
 		for j := 0; j < width; j++ {
 			if given[i][j] == 0xFF {
 				output = append(output, "██")
-			} else if given [i][j] == 0x00 {
+			} else if given[i][j] == 0x00 {
 				output = append(output, "  ")
 			}
 		}

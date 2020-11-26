@@ -64,7 +64,7 @@ func saveWorld(p Params, c distributorChannels, world [][]bool) {
 	}
 }
 
-// distributor divides the work between workers and interacts with other goroutines.
+// Distributor divides the work between workers and interacts with other goroutines.
 func distributor(p Params, c distributorChannels) {
 	world := loadWorld(p, c)
 	mut := sync.Mutex{}

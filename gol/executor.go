@@ -45,7 +45,7 @@ func FindAliveNeighbours(world [][]bool, x int, y int) int {
 	return aliveNeighbours
 }
 
-// Perform one iteration of the game of life on the argument world
+// Executor performs one iteration of the game of life on the argument world
 func executor(par executorParams, sx, sy, dx, dy int, world, nextWorld [][]bool) [][]bool {
 	defer par.wg.Done()
 	for y := sy; y < sy+dy; y++ {
