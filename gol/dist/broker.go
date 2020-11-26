@@ -2,6 +2,7 @@ package dist
 
 import (
 	"sync"
+	"time"
 
 	"uk.ac.bris.cs/gameoflife/gol"
 )
@@ -21,6 +22,33 @@ type BrokerRes struct {
 	FinalState [][]bool
 }
 
+func timer(bs *BrokerState, world *[][]bool, turn *int, mut *sync.Mutex, stop <-chan struct{}) {
+	tick := time.Tick(2 * time.Second)
+	for {
+		select {
+		case <-tick:
+			mut.Lock()
+			cells := gol.CalculateAliveCells(*world)
+
+			var err error
+			var res ClientRes
+			event := gol.AliveCellsCount{CellsCount: len(cells), CompletedTurns: *turn}
+			events := make([][]byte, 1)
+			events[0], err = EncodeEvent(event)
+			if err != nil {
+				panic(err)
+			}
+			arg := ClientReq{events}
+
+			bs.Params.Client.Call(SendEvents, arg, &res)
+			mut.Unlock()
+		case <-stop:
+			return
+		}
+
+	}
+}
+
 // Broker takes care of all communication between workers
 func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 	numWorkers := len(bs.Params.Workers)
@@ -29,6 +57,9 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 	width := bs.Params.ImageWidth
 	quot := height / numWorkers
 	rem := height % numWorkers
+
+	mut := sync.Mutex{}
+	stop := make(chan struct{})
 
 	// Cache slice heights, annoying to recalculate
 	slices := make([]int, numWorkers)
@@ -57,6 +88,7 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 	wg.Wait()
 
 	turn := 0
+	go timer(bs, &world, &turn, &mut, stop)
 	for turn < bs.Params.Turns {
 		nextWorld := newWorld(height, width)
 		// TODO: Interact via interactor
@@ -82,14 +114,17 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 		}
 
 		wg.Wait()
+		mut.Lock()
 		world = nextWorld
 		turn++
+		mut.Unlock()
 
 		// send event turn complete
 	}
 	// send event totally complete
 
-	// stop timer?
+	var signal struct{}
+	stop <- signal
 	res.FinalState = world
 	return nil
 }

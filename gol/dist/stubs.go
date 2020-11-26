@@ -8,3 +8,6 @@ var Worker = "WorkerState.Worker"
 
 // InitWorker initWorker
 var InitWorker = "WorkerState.InitWorker"
+
+// SendEvents sendEvents
+var SendEvents = "ClientState.SendEvents"

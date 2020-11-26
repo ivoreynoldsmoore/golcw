@@ -12,7 +12,7 @@ type executorParams struct {
 	turn int
 }
 
-func calculateAliveCells(world [][]bool) []util.Cell {
+func CalculateAliveCells(world [][]bool) []util.Cell {
 	cells := []util.Cell{}
 	for y, col := range world {
 		for x, v := range col {

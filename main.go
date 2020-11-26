@@ -1,16 +1,14 @@
 package main
 
 import (
+	"encoding/gob"
 	"flag"
 	"fmt"
-	"net"
 	"net/rpc"
 	"runtime"
 	"strings"
 
 	"uk.ac.bris.cs/gameoflife/gol"
-	"uk.ac.bris.cs/gameoflife/gol/dist"
-	"uk.ac.bris.cs/gameoflife/util"
 )
 
 // main is the function called when starting Game of Life with 'go run .'
@@ -30,19 +28,20 @@ func main() {
 	flag.IntVar(
 		&params.ImageWidth,
 		"w",
-		16,
+		512,
 		"Specify the width of the image. Defaults to 512.")
 
 	flag.IntVar(
 		&params.ImageHeight,
 		"h",
-		16,
+		512,
 		"Specify the height of the image. Defaults to 512.")
 
 	flag.IntVar(
 		&params.Turns,
 		"turns",
-		10,
+		// 10,
+		10000000000,
 		"Specify the number of turns to process. Defaults to 10000000000.")
 
 	flag.StringVar(
@@ -82,58 +81,22 @@ func main() {
 	fmt.Println("Width:", params.ImageWidth)
 	fmt.Println("Height:", params.ImageHeight)
 
-	keyPresses := make(chan rune, 10)
-	events := make(chan gol.Event, 1000)
+	gob.Register(&gol.AliveCellsCount{})
+	gob.Register(&gol.ImageOutputComplete{})
+	gob.Register(&gol.StateChange{})
+	gob.Register(&gol.CellFlipped{})
+	gob.Register(&gol.TurnComplete{})
+	gob.Register(&gol.FinalTurnComplete{})
 
 	// First, client listens and broker connnects to it.
 	// Then broker listens and client connects backwards.
 	// Finally, each worker listens and broker connects to all of them.
 	if params.Role == "client" {
-
-		lis, err := net.Listen("tcp", clientPort)
-		handleError(err)
-		defer lis.Close()
-		go rpc.Accept(lis)
-
-		params.Broker, err = rpc.Dial("tcp", BrokerAddr)
-		for err != nil {
-			params.Broker, err = rpc.Dial("tcp", BrokerAddr)
-		}
-
-		world := gol.ReadFile(params, events, keyPresses)
-		var res dist.BrokerRes
-		params.Broker.Call(dist.Broker, dist.BrokerReq{world}, &res)
-		util.VisualiseBooleanMatrix(res.FinalState, params.ImageWidth, params.ImageHeight)
-		// sdl.Start(params, events, keyPresses)
+		client(params, clientPort, BrokerAddr)
 	} else if params.Role == "broker" {
-
-		var err error
-		params.Client, err = rpc.Dial("tcp", ClientAddr)
-		for err != nil {
-			params.Client, err = rpc.Dial("tcp", ClientAddr)
-		}
-
-		lis, err := net.Listen("tcp", brokerPort)
-		handleError(err)
-		defer lis.Close()
-
-		for idx, worker := range WorkerAddrs {
-			var err error
-			params.Workers[idx], err = rpc.Dial("tcp", worker)
-			for err != nil {
-				params.Workers[idx], err = rpc.Dial("tcp", worker)
-			}
-		}
-
-		rpc.Register(&dist.BrokerState{params})
-		rpc.Accept(lis)
+		broker(params, ClientAddr, brokerPort, WorkerAddrs)
 	} else if params.Role == "worker" {
-
-		lis, err := net.Listen("tcp", workerPort)
-		handleError(err)
-		defer lis.Close()
-		rpc.Register(&dist.WorkerState{})
-		rpc.Accept(lis)
+		worker(workerPort)
 	}
 }
 

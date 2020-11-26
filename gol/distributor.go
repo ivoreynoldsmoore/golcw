@@ -24,7 +24,7 @@ func timer(c distributorChannels, world *[][]bool, turn *int, mut *sync.Mutex, s
 		select {
 		case <-tick:
 			mut.Lock()
-			cells := calculateAliveCells(*world)
+			cells := CalculateAliveCells(*world)
 			c.events <- AliveCellsCount{CellsCount: len(cells), CompletedTurns: *turn}
 			mut.Unlock()
 		case <-stop:
@@ -130,7 +130,7 @@ outer:
 	stop <- s
 	saveWorld(p, c, world)
 
-	c.events <- FinalTurnComplete{Alive: calculateAliveCells(world), CompletedTurns: turn}
+	c.events <- FinalTurnComplete{Alive: CalculateAliveCells(world), CompletedTurns: turn}
 
 	// Make sure that the Io has finished any output before exiting.
 	c.ioCommand <- ioCheckIdle
