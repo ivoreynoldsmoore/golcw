@@ -1,24 +1,24 @@
 package gol
 
 import (
+	"encoding/gob"
 	"fmt"
-	"net/rpc"
 )
 
-// Params provides the details of how to run the Game of Life and which image to load.
-type Params struct {
-	Turns       int
-	Threads     int
-	ImageWidth  int
-	ImageHeight int
-	Role        string
-	Client      *rpc.Client
-	Broker      *rpc.Client
-	Workers     []*rpc.Client
+// DefaultNetParams returns a set of "default" network parameters
+func DefaultNetParams() NetParams {
+	return NetParams{
+		ClientAddr:  "127.0.0.1:8040",
+		ClientPort:  ":8040",
+		BrokerAddr:  "127.0.0.1:8020",
+		BrokerPort:  ":8020",
+		WorkerAddrs: []string{"127.0.0.1:8030"},
+		WorkerPorts: []string{":8030"},
+	}
 }
 
 // ReadFile starts the processing of Game of Life. It should initialise channels and goroutines.
-func ReadFile(p Params, events chan<- Event, keyPresses <-chan rune) [][]bool {
+func readFile(p Params, events chan<- Event, keyPresses <-chan rune) ([][]bool, ioChannels) {
 
 	ioCommand := make(chan ioCommand)
 	ioIdle := make(chan bool)
@@ -35,7 +35,7 @@ func ReadFile(p Params, events chan<- Event, keyPresses <-chan rune) [][]bool {
 
 	go startIo(p, c)
 
-	world := newWorld(p)
+	world := NewWorld(p)
 	c.command <- ioInput
 	ioFilename <- fmt.Sprintf("%dx%d", p.ImageWidth, p.ImageHeight)
 	for y := 0; y < p.ImageHeight; y++ {
@@ -47,5 +47,19 @@ func ReadFile(p Params, events chan<- Event, keyPresses <-chan rune) [][]bool {
 			// }
 		}
 	}
-	return world
+	return world, c
+}
+
+// Run is an entrypoint for tests
+func Run(p Params, events chan Event, keyPresses chan rune) {
+	gob.Register(&AliveCellsCount{})
+	gob.Register(&ImageOutputComplete{})
+	gob.Register(&StateChange{})
+	gob.Register(&CellFlipped{})
+	gob.Register(&TurnComplete{})
+	gob.Register(&FinalTurnComplete{})
+
+	defaults := DefaultNetParams()
+	go RunClient(p, defaults.ClientPort, defaults.BrokerAddr, events, keyPresses)
+	fmt.Println("LOG: gol.Run done, returning")
 }

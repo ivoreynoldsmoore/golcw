@@ -4,9 +4,10 @@ import (
 	"encoding/gob"
 	"flag"
 	"fmt"
-	"net/rpc"
 	"runtime"
 	"strings"
+
+	"uk.ac.bris.cs/gameoflife/sdl"
 
 	"uk.ac.bris.cs/gameoflife/gol"
 )
@@ -18,6 +19,8 @@ func main() {
 	var ClientAddr string
 	var BrokerAddr string
 	var WorkerAddrs []string
+
+	defaults := gol.DefaultNetParams()
 
 	flag.IntVar(
 		&params.Threads,
@@ -44,8 +47,9 @@ func main() {
 		10000000000,
 		"Specify the number of turns to process. Defaults to 10000000000.")
 
+	var role string
 	flag.StringVar(
-		&params.Role,
+		&role,
 		"role",
 		"client",
 		"Specifies the role of this machine. Can be client, broker or worker. Defaults to client.")
@@ -53,33 +57,28 @@ func main() {
 	flag.StringVar(
 		&ClientAddr,
 		"client",
-		"127.0.0.1:8040",
+		defaults.ClientAddr,
 		"Specifies the address of the client, which will run the SDL controller.")
 
 	flag.StringVar(
 		&BrokerAddr,
 		"broker",
-		"127.0.0.1:8020",
+		defaults.BrokerAddr,
 		"Specifies the address of the broker, which will communicate between all machines.")
 
-	var workers string
+	var workersString string
 	flag.StringVar(
-		&workers,
+		&workersString,
 		"workers",
-		"127.0.0.1:8030",
+		defaults.WorkerAddrs[0],
 		"Specifies the list of worker machines. #-separated.")
 
 	flag.Parse()
-	WorkerAddrs = strings.Split(workers, "#")
-	params.Workers = make([]*rpc.Client, len(WorkerAddrs))
+	WorkerAddrs = strings.Split(workersString, "#")
 	clientPort := ":" + strings.Split(ClientAddr, ":")[1]
 	brokerPort := ":" + strings.Split(BrokerAddr, ":")[1]
 	// Assumes all workers on same port
 	workerPort := ":" + strings.Split(WorkerAddrs[0], ":")[1]
-
-	fmt.Println("Threads:", params.Threads)
-	fmt.Println("Width:", params.ImageWidth)
-	fmt.Println("Height:", params.ImageHeight)
 
 	gob.Register(&gol.AliveCellsCount{})
 	gob.Register(&gol.ImageOutputComplete{})
@@ -88,20 +87,22 @@ func main() {
 	gob.Register(&gol.TurnComplete{})
 	gob.Register(&gol.FinalTurnComplete{})
 
+	fmt.Println("Threads:", params.Threads)
+	fmt.Println("Width:", params.ImageWidth)
+	fmt.Println("Height:", params.ImageHeight)
+
+	keyPresses := make(chan rune, 10)
+	events := make(chan gol.Event, 1000)
+
 	// First, client listens and broker connnects to it.
 	// Then broker listens and client connects backwards.
 	// Finally, each worker listens and broker connects to all of them.
-	if params.Role == "client" {
-		client(params, clientPort, BrokerAddr)
-	} else if params.Role == "broker" {
-		broker(params, ClientAddr, brokerPort, WorkerAddrs)
-	} else if params.Role == "worker" {
-		worker(workerPort)
-	}
-}
-
-func handleError(err error) {
-	if err != nil {
-		panic(err)
+	if role == "client" {
+		go gol.RunClient(params, clientPort, BrokerAddr, events, keyPresses)
+		sdl.Start(params, events, keyPresses)
+	} else if role == "broker" {
+		gol.RunBroker(params, ClientAddr, brokerPort, WorkerAddrs)
+	} else if role == "worker" {
+		gol.RunWorker(workerPort)
 	}
 }
