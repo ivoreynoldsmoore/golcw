@@ -3,12 +3,13 @@ package gol
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"net/rpc"
 )
 
 // ClientState holds all information the client needs
 type ClientState struct {
-	Events chan<- Event
+	Events chan Event
 	Broker *rpc.Client
 }
 
@@ -28,14 +29,33 @@ func (cs *ClientState) SendEvents(req ClientReq, res *ClientRes) (err error) {
 	dec := gob.NewDecoder(&buf)
 
 	for _, e := range req.Events {
-		var event Event
+		var event interface{}
 		buf.Write(e)
 		err := dec.Decode(&event)
 		HandleError(err)
 		buf.Reset()
-		go func() {
-			cs.Events <- event
-		}()
+
+		// Big """work-around""" for gob encoding/interface type errors
+		// Event decodes into value of type Event, but really has type *Event
+		// This code looks ugly, but is the only way we managed to make this decoding work
+		fmt.Println("LOG: Recv event")
+		fmt.Println(event)
+		switch e := event.(type) {
+		case *AliveCellsCount:
+			cs.Events <- *e
+		case *CellFlipped:
+			cs.Events <- *e
+		case *ImageOutputComplete:
+			cs.Events <- *e
+		case *StateChange:
+			cs.Events <- *e
+		case *TurnComplete:
+			cs.Events <- *e
+		case *FinalTurnComplete:
+			cs.Events <- *e
+		default:
+			panic("Could not decode event")
+		}
 	}
 	return nil
 }

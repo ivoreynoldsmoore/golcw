@@ -1,6 +1,7 @@
 package gol
 
 import (
+	"fmt"
 	"net/rpc"
 	"sync"
 	"time"
@@ -40,18 +41,22 @@ func timer(bs *BrokerState, world *[][]bool, turn *int, mut *sync.Mutex, stop <-
 }
 
 func encodeAndSendEvent(bs *BrokerState, event Event) {
-	// bytes, err := EncodeEvent(event)
-	// HandleError(err)
+	fmt.Println(event)
+	bytes, err := EncodeEvent(event)
+	HandleError(err)
 
-	// req := ClientReq{Events: [][]byte{bytes}}
-	// var res ClientRes
-	// // err = bs.Client.Call(SendEvents, req, &res)
-	// fmt.Println("LOG: Event sent")
-	// HandleError(err)
+	req := ClientReq{Events: [][]byte{bytes}}
+	var res ClientRes
+	fmt.Println("LOG: Trying to send event")
+	fmt.Println(event)
+	err = bs.Client.Call(SendEvents, req, &res)
+	fmt.Println("LOG: Event sent")
+	HandleError(err)
 }
 
 // Broker takes care of all communication between workers
 func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
+	fmt.Println("LOG: NEW BROKER\n")
 	numWorkers := len(bs.Workers)
 	world := req.InitialState
 	height := req.Params.ImageHeight
@@ -123,12 +128,13 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 		turn++
 		mut.Unlock()
 
-		// send event turn complete
+		encodeAndSendEvent(bs, TurnComplete{CompletedTurns: turn})
 	}
-	encodeAndSendEvent(bs, FinalTurnComplete{CompletedTurns: turn, Alive: CalculateAliveCells(world)})
 
 	var signal struct{}
 	stop <- signal
+	encodeAndSendEvent(bs, FinalTurnComplete{CompletedTurns: turn, Alive: CalculateAliveCells(world)})
+
 	res.FinalState = world
 
 	mut.Lock()
