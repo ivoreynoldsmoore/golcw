@@ -70,6 +70,7 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 	}
 	slices[numWorkers-1] = quot + rem
 
+	// Initialise all workers
 	wg := sync.WaitGroup{}
 	for i := 0; i < numWorkers; i++ {
 		var res InitWorkerRes
@@ -90,6 +91,7 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 
 	turn := 0
 	go timer(bs, &world, &turn, &mut, stop)
+	// Main loop
 	for turn < req.Params.Turns {
 		nextWorld := newWorld(height, width)
 		// TODO: Interact via interactor
@@ -104,7 +106,8 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 					RowAbove: world[(quot*i+height+slices[i])%height],
 					Turn:     turn}
 
-				bs.Workers[i%numWorkers].Call(Worker, req, &res)
+				err := bs.Workers[i%numWorkers].Call(Worker, req, &res)
+				HandleError(err)
 
 				// We only copy the section we're interested about
 				// The rest is probably bogus

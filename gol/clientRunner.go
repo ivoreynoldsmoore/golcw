@@ -26,10 +26,10 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 	var res BrokerRes
 	fmt.Println("LOG: Client sending request")
 	broker.Call(Broker, BrokerReq{InitialState: world, Params: params}, &res)
-	SaveWorld(world, params, c)
+	SaveWorld(res.FinalState, params, c)
 
 	fmt.Println("LOG: Client done, returning")
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
 	// Stop SDL/tests gracefully
 	close(events)
 	return res.FinalState

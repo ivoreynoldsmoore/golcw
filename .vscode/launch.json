@@ -9,9 +9,9 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "gameoflife",
+            "program": "main.go",
             "env": {},
-            "args": []
+            "args": ["-role", "broker"]
         }
     ]
 }

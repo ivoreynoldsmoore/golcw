@@ -46,11 +46,12 @@ func (ws *WorkerState) InitWorker(req InitWorkerReq, res *InitWorkerRes) (err er
 
 // Worker is a machine that takes some section of the image and processes work on it for a number of turns
 func (ws *WorkerState) Worker(req WorkerReq, res *WorkerRes) (err error) {
+	// Copy rows above and below into their correct position
 	ws.World[(ws.Offset+ws.Height-1)%ws.Height] = req.RowBelow
-	ws.World[(ws.Offset+ws.Height-1)%ws.Height] = req.RowBelow
+	ws.World[(ws.Offset+ws.Height+ws.Slice)%ws.Height] = req.RowAbove
 	nextWorld := newWorld(ws.Height, ws.Width)
 
-	for y := 0; y < ws.Height; y++ {
+	for y := ws.Offset; y < ws.Offset+ws.Slice; y++ {
 		for x := 0; x < ws.Width; x++ {
 			val := ws.World[y][x]
 			// cell := util.Cell{X: x, Y: req.offset + y}
