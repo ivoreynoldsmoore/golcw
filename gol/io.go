@@ -10,7 +10,8 @@ import (
 	"uk.ac.bris.cs/gameoflife/util"
 )
 
-type ioChannels struct {
+// IoChannels hold channels for IO
+type IoChannels struct {
 	command  chan ioCommand
 	idle     chan bool
 	filename chan string
@@ -21,7 +22,7 @@ type ioChannels struct {
 // ioState is the internal ioState of the io goroutine.
 type ioState struct {
 	params   Params
-	channels ioChannels
+	channels IoChannels
 }
 
 // ioCommand allows requesting behaviour from the io (pgm) goroutine.
@@ -121,7 +122,7 @@ func (io *ioState) readPgmImage() {
 }
 
 // startIo should be the entrypoint of the io goroutine.
-func startIo(p Params, c ioChannels) {
+func startIo(p Params, c IoChannels) {
 	io := ioState{
 		params:   p,
 		channels: c,

@@ -11,7 +11,10 @@ func RunWorker(workerPort string) {
 	lis, err := net.Listen("tcp", workerPort)
 	HandleError(err)
 	defer lis.Close()
+
 	fmt.Println("LOG: Worker accepting requests")
-	rpc.Register(&WorkerState{})
-	rpc.Accept(lis)
+	stopper := make(chan struct{})
+	rpc.Register(&WorkerState{Stopper: stopper})
+	go rpc.Accept(lis)
+	<-stopper
 }

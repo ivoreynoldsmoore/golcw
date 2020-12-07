@@ -7,19 +7,26 @@ import (
 	"time"
 )
 
+// CState is a work around for tests
+// Cause rpc.Register to properly use the new state struct
+var CState *ClientState
+
 // RunClient is used an an entrypoint for tests and for the main program
 func RunClient(params Params, clientPort, brokerAddr string, events chan Event, keyPresses chan rune) [][]bool {
 	lis, err := net.Listen("tcp", clientPort)
 	HandleError(err)
 	defer lis.Close()
 
-	// Intermediary events channel that isn't closed
-	// This works around 'send on closed channel' errors in repeated test runs
-	events2 := make(chan Event)
-
-	var broker *rpc.Client
+	broker := (*rpc.Client)(nil)
+	if CState == nil {
+		CState = &ClientState{Events: events, Broker: broker, Params: params}
+	} else {
+		CState.Broker = broker
+		CState.Events = events
+		CState.Params = params
+	}
 	fmt.Println("LOG: Create new ClientState")
-	rpc.Register(&ClientState{Events: events2, Broker: broker})
+	rpc.Register(CState)
 	go rpc.Accept(lis)
 
 	broker, err = rpc.Dial("tcp", brokerAddr)
@@ -27,42 +34,56 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 		broker, err = rpc.Dial("tcp", brokerAddr)
 	}
 
-	stop := make(chan struct{}, 10)
-	// Relay Events from events2 to events
-	// Prevent race-conditions involving closing
+	world, c := readFile(params, events, keyPresses)
+	CState.Io = c
+
+	stopper := make(chan struct{})
+	// Pass keypresses onto broker
 	go func() {
+		paused := false
 		for {
 			select {
-			case <-stop:
-				close(events)
+			case <-stopper:
 				return
-			case e := <-events2:
-				fmt.Println("GOT FROM EVENTS2")
-				fmt.Println(e)
-				events <- e
+			case e := <-keyPresses:
+				var res KpBrokerRes
+				broker.Call(KeypressBroker, KpBrokerReq{Event: e}, &res)
+				paused = !paused
+				if e == 'p' && paused {
+					fmt.Printf("Paused, Turn %d\n", res.Turn)
+				} else if e == 'p' {
+					fmt.Println("Continuing")
+				}
 			}
 		}
 	}()
 
-	world, c := readFile(params, events, keyPresses)
-	var res BrokerRes
+	var res1 BrokerRes
 	fmt.Println("LOG: Client sending request")
-	err = broker.Call(Broker, BrokerReq{InitialState: world, Params: params}, &res)
+	err = broker.Call(Broker, BrokerReq{InitialState: world, Params: params}, &res1)
 	fmt.Println("LOG: Got final state from broker!")
-	HandleError(err)
-	SaveWorld(res.FinalState, params, c)
-	time.Sleep(1 * time.Second)
+	var signal struct{}
+	stopper <- signal
 
-	var stopSignal struct{}
-	stop <- stopSignal
+	// Do not try and stop the broker if it returned early:
+	// Likely to early return because we stopped it with k keypress
+	if err == nil {
+		var res2 StopBrokerRes
+		err = broker.Call(StopBroker, StopBrokerReq{Restart: true}, &res2)
+		HandleError(err)
+		SaveWorld(res1.FinalState, params, c)
+	}
+
+	time.Sleep(1 * time.Second)
+	close(events)
 
 	// Stop SDL/tests gracefully
 	fmt.Println("LOG: Client done, returning")
-	return res.FinalState
+	return res1.FinalState
 }
 
 // SaveWorld takes a world and saves it as specified by the tests
-func SaveWorld(world [][]bool, p Params, c ioChannels) {
+func SaveWorld(world [][]bool, p Params, c IoChannels) {
 	c.command <- ioOutput
 	c.filename <- fmt.Sprintf("%dx%dx%d", p.ImageWidth, p.ImageHeight, p.Turns)
 	for y := 0; y < p.ImageHeight; y++ {

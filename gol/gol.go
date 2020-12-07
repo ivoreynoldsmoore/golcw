@@ -18,14 +18,14 @@ func DefaultNetParams() NetParams {
 }
 
 // ReadFile starts the processing of Game of Life. It should initialise channels and goroutines.
-func readFile(p Params, events chan<- Event, keyPresses <-chan rune) ([][]bool, ioChannels) {
+func readFile(p Params, events chan<- Event, keyPresses <-chan rune) ([][]bool, IoChannels) {
 
 	ioCommand := make(chan ioCommand)
 	ioIdle := make(chan bool)
 	ioFilename := make(chan string)
 	ioOutput := make(chan uint8)
 
-	c := ioChannels{
+	c := IoChannels{
 		command:  ioCommand,
 		idle:     ioIdle,
 		filename: ioFilename,

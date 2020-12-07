@@ -23,7 +23,8 @@ func TestAlive(t *testing.T) {
 	}
 	alive := readAliveCounts(p.ImageWidth, p.ImageHeight)
 	events := make(chan gol.Event)
-	gol.Run(p, events, nil)
+	keyPresses := make(chan rune, 10)
+	gol.Run(p, events, keyPresses)
 
 	implemented := make(chan bool)
 	go func() {
@@ -60,6 +61,7 @@ func TestAlive(t *testing.T) {
 			}
 		}
 		if i >= 5 {
+			keyPresses <- 'k'
 			return
 		}
 	}
