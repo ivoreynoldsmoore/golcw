@@ -151,9 +151,8 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 				go encodeAndSendEvents(bs, flipped)
 
 				// We only copy the section we're interested about
-				// The rest is probably bogus
 				for j := quot * i; j < quot*i+slices[i]; j++ {
-					nextWorld[j] = res.World[j]
+					nextWorld[j] = res.World[j-quot*i]
 				}
 			}(i)
 		}

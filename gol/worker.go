@@ -64,6 +64,8 @@ func (ws *WorkerState) Worker(req WorkerReq, res *WorkerRes) (err error) {
 	// Add height so negative mod works
 	ws.World[(ws.Offset+ws.Height-1)%ws.Height] = req.RowBelow
 	ws.World[(ws.Offset+ws.Height+ws.Slice)%ws.Height] = req.RowAbove
+
+	res.World = make([][]bool, ws.Slice)
 	nextWorld := newWorld(ws.Height, ws.Width)
 	cells := make([]util.Cell, 0)
 
@@ -86,9 +88,9 @@ func (ws *WorkerState) Worker(req WorkerReq, res *WorkerRes) (err error) {
 				// par.c.events <- CellFlipped{Cell: cell, CompletedTurns: par.turn}
 			}
 		}
+		res.World[y-ws.Offset] = nextWorld[y]
 	}
 	ws.World = nextWorld
-	res.World = nextWorld
 	res.Flipped = cells
 	return nil
 }
