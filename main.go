@@ -101,7 +101,7 @@ func main() {
 		go gol.RunClient(params, clientPort, BrokerAddr, events, keyPresses)
 		sdl.Start(params, events, keyPresses)
 	} else if role == "broker" {
-		gol.RunBroker(params, ClientAddr, brokerPort, WorkerAddrs)
+		gol.RunBroker(params, clientPort, brokerPort, WorkerAddrs)
 	} else if role == "worker" {
 		gol.RunWorker(workerPort)
 	}

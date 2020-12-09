@@ -14,11 +14,12 @@ type BrokerState struct {
 	Workers []*rpc.Client
 	// Internal
 	// Protects suspend and cond
-	Mutex   sync.Mutex
-	Suspend bool
-	Cond    sync.Cond
-	World   [][]bool
-	Turn    int
+	Mutex     sync.Mutex
+	Suspend   bool
+	Terminate bool
+	Cond      sync.Cond
+	World     [][]bool
+	Turn      int
 }
 
 // BrokerReq is the request type for the broker function
@@ -104,6 +105,13 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 	}
 	wg.Wait()
 
+	// Send initial cell flipped events
+	flipped := make([]Event, 0)
+	for _, flippedCell := range CalculateAliveCells(world) {
+		flipped = append(flipped, CellFlipped{CompletedTurns: 0, Cell: flippedCell})
+	}
+	encodeAndSendEvents(bs, flipped)
+
 	turn := 0
 	go timer(bs, stop)
 	// Main loop
@@ -112,6 +120,12 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 		bs.Mutex.Lock()
 		for bs.Suspend {
 			bs.Cond.Wait()
+		}
+		if bs.Terminate {
+			var signal struct{}
+			stop <- signal
+			res.FinalState = world
+			return nil
 		}
 		bs.Mutex.Unlock()
 
@@ -134,7 +148,7 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 				for _, flippedCell := range res.Flipped {
 					flipped = append(flipped, CellFlipped{CompletedTurns: turn, Cell: flippedCell})
 				}
-				encodeAndSendEvents(bs, flipped)
+				go encodeAndSendEvents(bs, flipped)
 
 				// We only copy the section we're interested about
 				// The rest is probably bogus
@@ -178,14 +192,15 @@ func (bs *BrokerState) KeypressBroker(req KpBrokerReq, res *KpBrokerRes) (err er
 		bs.Mutex.Unlock()
 	// New controller
 	case 'q':
-
+		bs.Terminate = true
+		// bs.StopBroker(StopBrokerReq{Restart: true}, &StopBrokerRes{})
 		bs.Mutex.Unlock()
 	// Pause processing
 	case 'p':
 		if bs.Suspend {
 			bs.Suspend = false
-			bs.Mutex.Unlock()
 			bs.Cond.Broadcast()
+			bs.Mutex.Unlock()
 		} else {
 			bs.Suspend = true
 			bs.Mutex.Unlock()
@@ -223,8 +238,7 @@ func encodeAndSendEvent(bs *BrokerState, event Event) {
 
 	req := ClientReq{Events: [][]byte{bytes}}
 	var res ClientRes
-	err = bs.Client.Call(SendEvents, req, &res)
-	HandleError(err)
+	bs.Client.Call(SendEvents, req, &res)
 }
 
 func encodeAndSendEvents(bs *BrokerState, events []Event) {
@@ -237,6 +251,5 @@ func encodeAndSendEvents(bs *BrokerState, events []Event) {
 
 	req := ClientReq{Events: eventBytes}
 	var res ClientRes
-	err := bs.Client.Call(SendEvents, req, &res)
-	HandleError(err)
+	bs.Client.Call(SendEvents, req, &res)
 }

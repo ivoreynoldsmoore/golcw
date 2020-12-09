@@ -13,11 +13,21 @@ var CState *ClientState
 
 // RunClient is used an an entrypoint for tests and for the main program
 func RunClient(params Params, clientPort, brokerAddr string, events chan Event, keyPresses chan rune) [][]bool {
+	// Create initial connection to negotiate network parameters e.g. IPs
+	tmp, err := net.Dial("tcp", brokerAddr)
+	HandleError(err)
+	defer tmp.Close()
+	time.Sleep(1 * time.Second)
+
+	broker, err := rpc.Dial("tcp", brokerAddr)
+	for err != nil {
+		broker, err = rpc.Dial("tcp", brokerAddr)
+	}
+
 	lis, err := net.Listen("tcp", clientPort)
 	HandleError(err)
 	defer lis.Close()
 
-	broker := (*rpc.Client)(nil)
 	if CState == nil {
 		CState = &ClientState{Events: events, Broker: broker, Params: params}
 	} else {
@@ -28,11 +38,6 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 	fmt.Println("LOG: Create new ClientState")
 	rpc.Register(CState)
 	go rpc.Accept(lis)
-
-	broker, err = rpc.Dial("tcp", brokerAddr)
-	for err != nil {
-		broker, err = rpc.Dial("tcp", brokerAddr)
-	}
 
 	world, c := readFile(params, events, keyPresses)
 	CState.Io = c

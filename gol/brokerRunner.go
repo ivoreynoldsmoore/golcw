@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"net"
 	"net/rpc"
+	"strings"
 )
 
+// BState is a work around for recreating RPC connections
+var BState *BrokerState
+
 // RunBroker initialises and runs the broker
-func RunBroker(params Params, clientAddr, brokerPort string, workerAddrs []string) {
+func RunBroker(params Params, clientPort, brokerPort string, workerAddrs []string) {
 	stopper := make(chan bool)
 
 	workers := make([]*rpc.Client, len(workerAddrs))
@@ -21,26 +25,42 @@ func RunBroker(params Params, clientAddr, brokerPort string, workerAddrs []strin
 
 	// Workaround for tests
 	// Tests require constant reconnecting and disconnecting client-broker
-	for {
-		err := (error)(nil)
-		client, err := rpc.Dial("tcp", clientAddr)
-		for err != nil {
-			client, err = rpc.Dial("tcp", clientAddr)
-		}
-		fmt.Println("LOG: Connected to client")
+	restart := true
+	for restart {
+		fmt.Println("aa")
+		l, err := net.Listen("tcp", brokerPort)
+		HandleError(err)
+		tmp, err := l.Accept()
+		HandleError(err)
+		clientAddr := strings.Split(tmp.RemoteAddr().String(), ":")[0] + clientPort
+		tmp.Close()
+		l.Close()
 
 		lis, err := net.Listen("tcp", brokerPort)
 		HandleError(err)
 
-		fmt.Println("LOG: Broker accepting requests")
-		rpc.Register(&BrokerState{Stopper: stopper, Client: client, Workers: workers})
+		client, err := rpc.Dial("tcp", clientAddr)
+		for err != nil {
+			client, err = rpc.Dial("tcp", clientAddr)
+		}
+		fmt.Println("LOG: aaa")
+
+		if BState == nil {
+			BState = &BrokerState{Stopper: stopper, Client: client, Workers: workers}
+		} else {
+			BState.Client = client
+			BState.Stopper = stopper
+			BState.Workers = workers
+
+			BState.Suspend = false
+			BState.Terminate = false
+		}
+		rpc.Register(BState)
 		go rpc.Accept(lis)
 
 		// Break and exit if not restarting, recv via Stop procedure
-		restart := <-stopper
+		restart = <-stopper
 		lis.Close()
-		if !restart {
-			break
-		}
+		// client.Close()
 	}
 }
