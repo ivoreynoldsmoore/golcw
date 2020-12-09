@@ -91,6 +91,7 @@ func (ws *WorkerState) Worker(req WorkerReq, res *WorkerRes) (err error) {
 		res.World[y-ws.Offset] = nextWorld[y]
 	}
 	ws.World = nextWorld
+	// res.World = nextWorld
 	res.Flipped = cells
 	return nil
 }

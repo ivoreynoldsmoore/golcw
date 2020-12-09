@@ -15,7 +15,9 @@ var CState *ClientState
 func RunClient(params Params, clientPort, brokerAddr string, events chan Event, keyPresses chan rune) [][]bool {
 	// Create initial connection to negotiate network parameters e.g. IPs
 	tmp, err := net.Dial("tcp", brokerAddr)
-	HandleError(err)
+	for err != nil {
+		tmp, err = net.Dial("tcp", brokerAddr)
+	}
 	defer tmp.Close()
 	time.Sleep(1 * time.Second)
 

@@ -130,13 +130,13 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 		bs.Mutex.Unlock()
 
 		nextWorld := newWorld(height, width)
-		flipped := make([]Event, 0)
 		// TODO: Interact via interactor
 		wg := sync.WaitGroup{}
 		for i := 0; i < numWorkers; i++ {
 			wg.Add(1)
 			go func(i int) {
 				defer wg.Done()
+				flipped := make([]Event, 0)
 				var res WorkerRes
 				req := WorkerReq{
 					RowBelow: world[(quot*i+height-1)%height],
@@ -152,6 +152,7 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 
 				// We only copy the section we're interested about
 				for j := quot * i; j < quot*i+slices[i]; j++ {
+					// nextWorld[j] = res.World[j]
 					nextWorld[j] = res.World[j-quot*i]
 				}
 			}(i)
