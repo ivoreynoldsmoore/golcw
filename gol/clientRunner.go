@@ -83,7 +83,6 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 		SaveWorld(res1.FinalState, params, c)
 	}
 
-	time.Sleep(1 * time.Second)
 	close(events)
 
 	// Stop SDL/tests gracefully
@@ -104,4 +103,6 @@ func SaveWorld(world [][]bool, p Params, c IoChannels) {
 			}
 		}
 	}
+	c.command <- ioCheckIdle
+	<-c.idle
 }
