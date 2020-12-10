@@ -58,6 +58,7 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 				return
 			case e := <-keyPresses:
 				var res KpBrokerRes
+				fmt.Println("Sending")
 				broker.Call(KeypressBroker, KpBrokerReq{Event: e}, &res)
 				paused = !paused
 				if e == 'p' && paused {
