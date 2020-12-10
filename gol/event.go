@@ -2,6 +2,7 @@ package gol
 
 import (
 	"fmt"
+
 	"uk.ac.bris.cs/gameoflife/util"
 )
 
@@ -32,8 +33,11 @@ type ImageOutputComplete struct { // implements Event
 type State int
 
 const (
+	// Paused paused
 	Paused State = iota
+	// Executing comment
 	Executing
+	// Quitting comment
 	Quitting
 )
 
@@ -86,6 +90,7 @@ func (event StateChange) String() string {
 	return fmt.Sprintf("%v", event.NewState)
 }
 
+// GetCompletedTurns GetCompletedTurns
 func (event StateChange) GetCompletedTurns() int {
 	return event.CompletedTurns
 }
@@ -94,6 +99,7 @@ func (event AliveCellsCount) String() string {
 	return fmt.Sprintf("Alive Cells %v", event.CellsCount)
 }
 
+// GetCompletedTurns GetCompletedTurns
 func (event AliveCellsCount) GetCompletedTurns() int {
 	return event.CompletedTurns
 }
@@ -102,6 +108,7 @@ func (event ImageOutputComplete) String() string {
 	return fmt.Sprintf("File %v output complete", event.Filename)
 }
 
+// GetCompletedTurns GetCompletedTurns
 func (event ImageOutputComplete) GetCompletedTurns() int {
 	return event.CompletedTurns
 }
@@ -110,6 +117,7 @@ func (event CellFlipped) String() string {
 	return fmt.Sprintf("")
 }
 
+// GetCompletedTurns GetCompletedTurns
 func (event CellFlipped) GetCompletedTurns() int {
 	return event.CompletedTurns
 }
@@ -118,6 +126,7 @@ func (event TurnComplete) String() string {
 	return fmt.Sprintf("")
 }
 
+// GetCompletedTurns GetCompletedTurns
 func (event TurnComplete) GetCompletedTurns() int {
 	return event.CompletedTurns
 }
@@ -126,6 +135,7 @@ func (event FinalTurnComplete) String() string {
 	return fmt.Sprintf("")
 }
 
+// GetCompletedTurns GetCompletedTurns
 func (event FinalTurnComplete) GetCompletedTurns() int {
 	return event.CompletedTurns
 }

@@ -1,0 +1,70 @@
+
+BenchmarkGol
+BenchmarkGol/BenchmarkGol_1_
+BenchmarkGol/BenchmarkGol_1_-12                      1        25999919940 ns/op
+BenchmarkGol/BenchmarkGol_2_
+BenchmarkGol/BenchmarkGol_2_-12                      1        17899231722 ns/op
+BenchmarkGol/BenchmarkGol_3_
+BenchmarkGol/BenchmarkGol_3_-12                      1        15444502602 ns/op
+BenchmarkGol/BenchmarkGol_4_
+BenchmarkGol/BenchmarkGol_4_-12                      1        13719100668 ns/op
+BenchmarkGol/BenchmarkGol_5_
+BenchmarkGol/BenchmarkGol_5_-12                      1        12728286343 ns/op
+BenchmarkGol/BenchmarkGol_6_
+BenchmarkGol/BenchmarkGol_6_-12                      1        11824694889 ns/op
+BenchmarkGol/BenchmarkGol_7_
+BenchmarkGol/BenchmarkGol_7_-12                      1        11232914041 ns/op
+BenchmarkGol/BenchmarkGol_8_
+BenchmarkGol/BenchmarkGol_8_-12                      1        10702920532 ns/op
+BenchmarkGol/BenchmarkGol_9_
+BenchmarkGol/BenchmarkGol_9_-12                      1        10047370643 ns/op
+BenchmarkGol/BenchmarkGol_10_
+BenchmarkGol/BenchmarkGol_10_-12                     1        9622132920 ns/op
+BenchmarkGol/BenchmarkGol_11_
+BenchmarkGol/BenchmarkGol_11_-12                     1        9234594494 ns/op
+BenchmarkGol/BenchmarkGol_12_
+BenchmarkGol/BenchmarkGol_12_-12                     1        8993853092 ns/op
+BenchmarkGol/BenchmarkGol_13_
+BenchmarkGol/BenchmarkGol_13_-12                     1        8662458992 ns/op
+BenchmarkGol/BenchmarkGol_14_
+BenchmarkGol/BenchmarkGol_14_-12                     1        8445902896 ns/op
+BenchmarkGol/BenchmarkGol_15_
+BenchmarkGol/BenchmarkGol_15_-12                     1        8221082809 ns/op
+BenchmarkGol/BenchmarkGol_16_
+BenchmarkGol/BenchmarkGol_16_-12                     1        7959818343 ns/op
+PASS
+
+BenchmarkGol/BenchmarkGol_1_
+BenchmarkGol/BenchmarkGol_1_-12                      1        23798404687 ns/op
+BenchmarkGol/BenchmarkGol_2_
+BenchmarkGol/BenchmarkGol_2_-12                      1        16768043532 ns/op
+BenchmarkGol/BenchmarkGol_3_
+BenchmarkGol/BenchmarkGol_3_-12                      1        14906230585 ns/op
+BenchmarkGol/BenchmarkGol_4_
+BenchmarkGol/BenchmarkGol_4_-12                      1        13332164859 ns/op
+BenchmarkGol/BenchmarkGol_5_
+BenchmarkGol/BenchmarkGol_5_-12                      1        12497057846 ns/op
+BenchmarkGol/BenchmarkGol_6_
+BenchmarkGol/BenchmarkGol_6_-12                      1        11928143181 ns/op
+BenchmarkGol/BenchmarkGol_7_
+BenchmarkGol/BenchmarkGol_7_-12                      1        11736710947 ns/op
+BenchmarkGol/BenchmarkGol_8_
+BenchmarkGol/BenchmarkGol_8_-12                      1        11652289061 ns/op
+BenchmarkGol/BenchmarkGol_9_
+BenchmarkGol/BenchmarkGol_9_-12                      1        11115290099 ns/op
+BenchmarkGol/BenchmarkGol_10_
+BenchmarkGol/BenchmarkGol_10_-12                     1        11065945646 ns/op
+BenchmarkGol/BenchmarkGol_11_
+BenchmarkGol/BenchmarkGol_11_-12                     1        10818078701 ns/op
+BenchmarkGol/BenchmarkGol_12_
+BenchmarkGol/BenchmarkGol_12_-12                     1        10743140968 ns/op
+BenchmarkGol/BenchmarkGol_13_
+BenchmarkGol/BenchmarkGol_13_-12                     1        10669719687 ns/op
+BenchmarkGol/BenchmarkGol_14_
+BenchmarkGol/BenchmarkGol_14_-12                     1        10580410128 ns/op
+BenchmarkGol/BenchmarkGol_15_
+BenchmarkGol/BenchmarkGol_15_-12                     1        10638354000 ns/op
+BenchmarkGol/BenchmarkGol_16_
+BenchmarkGol/BenchmarkGol_16_-12                     1        10569109287 ns/op
+PASS
+ok    uk.ac.bris.cs/gameoflife        202.837s
