@@ -31,7 +31,7 @@ func TestAlive(t *testing.T) {
 		timer := time.After(15 * time.Second)
 		select {
 		case <-timer:
-			t.Fatal("no AliveCellsCount events received in 5 seconds")
+			t.Fatal("no AliveCellsCount events received in 15 seconds")
 		case <-implemented:
 			return
 		}

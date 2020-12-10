@@ -10,10 +10,10 @@ func DefaultNetParams() NetParams {
 	return NetParams{
 		ClientAddr:  "127.0.0.1:8000",
 		ClientPort:  ":8000",
-		BrokerAddr:  "127.0.0.1:8100",
+		BrokerAddr:  "3.238.71.81:8000",
 		BrokerPort:  ":8100",
-		WorkerAddrs: []string{"127.0.0.1:8300"},
-		WorkerPorts: []string{":8300"},
+		WorkerAddrs: []string{"127.0.0.1:8000"},
+		WorkerPorts: []string{":8000"},
 	}
 }
 
