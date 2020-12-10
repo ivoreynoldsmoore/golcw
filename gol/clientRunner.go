@@ -14,6 +14,7 @@ var CState *ClientState
 // RunClient is used an an entrypoint for tests and for the main program
 func RunClient(params Params, clientPort, brokerAddr string, events chan Event, keyPresses chan rune) [][]bool {
 	// Create initial connection to negotiate network parameters e.g. IPs
+	fmt.Println("LOG: Client attempting to connect to Broker (1)")
 	tmp, err := net.Dial("tcp", brokerAddr)
 	for err != nil {
 		tmp, err = net.Dial("tcp", brokerAddr)
@@ -21,11 +22,13 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 	defer tmp.Close()
 	time.Sleep(1 * time.Second)
 
+	fmt.Println("LOG: Client attempting to connect to Broker (2)")
 	broker, err := rpc.Dial("tcp", brokerAddr)
 	for err != nil {
 		broker, err = rpc.Dial("tcp", brokerAddr)
 	}
 
+	fmt.Println("LOG: Client listening for Broker")
 	lis, err := net.Listen("tcp", clientPort)
 	HandleError(err)
 	defer lis.Close()

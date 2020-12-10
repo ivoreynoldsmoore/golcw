@@ -17,6 +17,7 @@ func RunBroker(params Params, clientPort, brokerPort string, workerAddrs []strin
 	workers := make([]*rpc.Client, len(workerAddrs))
 	for idx, worker := range workerAddrs {
 		var err error
+		fmt.Println("LOG: Broker connecting to a Worker")
 		workers[idx], err = rpc.Dial("tcp", worker)
 		for err != nil {
 			workers[idx], err = rpc.Dial("tcp", worker)
@@ -27,6 +28,7 @@ func RunBroker(params Params, clientPort, brokerPort string, workerAddrs []strin
 	// Tests require constant reconnecting and disconnecting client-broker
 	restart := true
 	for restart {
+		fmt.Println("LOG: Broker listening for Client (1)")
 		l, err := net.Listen("tcp", brokerPort)
 		HandleError(err)
 		tmp, err := l.Accept()
@@ -35,9 +37,11 @@ func RunBroker(params Params, clientPort, brokerPort string, workerAddrs []strin
 		tmp.Close()
 		l.Close()
 
+		fmt.Println("LOG: Broker listening for Client (2)")
 		lis, err := net.Listen("tcp", brokerPort)
 		HandleError(err)
 
+		fmt.Println("LOG: Broker connecting to Client")
 		client, err := rpc.Dial("tcp", clientAddr)
 		for err != nil {
 			client, err = rpc.Dial("tcp", clientAddr)

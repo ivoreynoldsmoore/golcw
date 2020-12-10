@@ -8,12 +8,12 @@ import (
 // DefaultNetParams returns a set of "default" network parameters
 func DefaultNetParams() NetParams {
 	return NetParams{
-		ClientAddr:  "127.0.0.1:8040",
-		ClientPort:  ":8040",
-		BrokerAddr:  "127.0.0.1:8020",
-		BrokerPort:  ":8020",
-		WorkerAddrs: []string{"127.0.0.1:8030"},
-		WorkerPorts: []string{":8030"},
+		ClientAddr:  "127.0.0.1:8200",
+		ClientPort:  ":8200",
+		BrokerAddr:  "127.0.0.1:8100",
+		BrokerPort:  ":8100",
+		WorkerAddrs: []string{"127.0.0.1:8300"},
+		WorkerPorts: []string{":8300"},
 	}
 }
 
