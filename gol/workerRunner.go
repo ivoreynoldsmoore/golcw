@@ -12,8 +12,8 @@ func RunWorker(workerPort string) {
 	HandleError(err)
 	defer lis.Close()
 
-	fmt.Println("LOG: Worker accepting requests")
 	stopper := make(chan struct{})
+	fmt.Println("Worker initialised")
 	rpc.Register(&WorkerState{Stopper: stopper})
 	go rpc.Accept(lis)
 	<-stopper

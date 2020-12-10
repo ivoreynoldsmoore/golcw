@@ -61,5 +61,4 @@ func Run(p Params, events chan Event, keyPresses chan rune) {
 
 	defaults := DefaultNetParams()
 	go RunClient(p, defaults.ClientPort, defaults.BrokerAddr, events, keyPresses)
-	fmt.Println("LOG: gol.Run done, returning")
 }

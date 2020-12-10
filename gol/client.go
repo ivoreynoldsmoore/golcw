@@ -42,8 +42,6 @@ func (cs *ClientState) SendEvents(req ClientReq, res *ClientRes) (err error) {
 		// Big """work-around""" for gob encoding/interface type errors
 		// Event decodes into value of type Event, but really has type *Event
 		// This code looks ugly, but is the only way we managed to make this decoding work
-		// fmt.Println("LOG: Recv event")
-		// fmt.Println(event)
 		switch e := event.(type) {
 		case *AliveCellsCount:
 			cs.Events <- *e

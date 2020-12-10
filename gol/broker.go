@@ -1,7 +1,6 @@
 package gol
 
 import (
-	"fmt"
 	"net/rpc"
 	"sync"
 	"time"
@@ -14,12 +13,18 @@ type BrokerState struct {
 	Workers []*rpc.Client
 	// Internal
 	// Protects suspend and cond
-	Mutex     sync.Mutex
-	Suspend   bool
-	Terminate bool
-	Cond      sync.Cond
-	World     [][]bool
-	Turn      int
+	Mutex         sync.Mutex
+	Suspend       bool
+	Terminate     bool
+	Cond          sync.Cond
+	World         [][]bool
+	Turn          int
+	Height, Width int
+	// We set this to true when q pressed, but it is false by default
+	// This will not change value whenever a new RPC "instance" is created
+	// As such we will use this to check if we should accept the client's new world
+	Reconnect      bool
+	InitialRequest Params
 }
 
 // BrokerReq is the request type for the broker function
@@ -66,7 +71,15 @@ func (bs *BrokerState) StopBroker(req StopBrokerReq, res *StopBrokerRes) (err er
 
 // Broker takes care of all communication between workers
 func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
-	fmt.Println("LOG: NEW BROKER")
+	// Ignore new parameters and continue
+	if bs.Reconnect {
+		req.InitialState = bs.World
+		req.Params = bs.InitialRequest
+	} else {
+		bs.InitialRequest = req.Params
+		bs.Turn = 0
+	}
+
 	numWorkers := len(bs.Workers)
 	world := req.InitialState
 	height := req.Params.ImageHeight
@@ -112,10 +125,9 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 	}
 	encodeAndSendEvents(bs, flipped)
 
-	turn := 0
 	go timer(bs, stop)
 	// Main loop
-	for turn < req.Params.Turns {
+	for bs.Turn < req.Params.Turns {
 		// Check if paused
 		bs.Mutex.Lock()
 		for bs.Suspend {
@@ -141,12 +153,12 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 				req := WorkerReq{
 					RowBelow: world[(quot*i+height-1)%height],
 					RowAbove: world[(quot*i+height+slices[i])%height],
-					Turn:     turn}
+					Turn:     bs.Turn}
 
 				err := bs.Workers[i%numWorkers].Call(Worker, req, &res)
 				HandleError(err)
 				for _, flippedCell := range res.Flipped {
-					flipped = append(flipped, CellFlipped{CompletedTurns: turn, Cell: flippedCell})
+					flipped = append(flipped, CellFlipped{CompletedTurns: bs.Turn, Cell: flippedCell})
 				}
 				go encodeAndSendEvents(bs, flipped)
 
@@ -162,16 +174,15 @@ func (bs *BrokerState) Broker(req BrokerReq, res *BrokerRes) (err error) {
 		bs.Mutex.Lock()
 		world = nextWorld
 		bs.World = world
-		turn++
-		bs.Turn = turn
+		bs.Turn++
 		bs.Mutex.Unlock()
 
-		encodeAndSendEvent(bs, TurnComplete{CompletedTurns: turn})
+		encodeAndSendEvent(bs, TurnComplete{CompletedTurns: bs.Turn})
 	}
 
 	var signal struct{}
 	stop <- signal
-	encodeAndSendEvent(bs, FinalTurnComplete{CompletedTurns: turn, Alive: CalculateAliveCells(world)})
+	encodeAndSendEvent(bs, FinalTurnComplete{CompletedTurns: bs.Turn, Alive: CalculateAliveCells(world)})
 
 	res.FinalState = world
 
@@ -192,6 +203,7 @@ func (bs *BrokerState) KeypressBroker(req KpBrokerReq, res *KpBrokerRes) (err er
 		bs.Mutex.Unlock()
 	// New controller
 	case 'q':
+		bs.Reconnect = true
 		bs.Terminate = true
 		// bs.StopBroker(StopBrokerReq{Restart: true}, &StopBrokerRes{})
 		bs.Mutex.Unlock()

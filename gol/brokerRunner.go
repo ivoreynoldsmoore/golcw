@@ -27,7 +27,6 @@ func RunBroker(params Params, clientPort, brokerPort string, workerAddrs []strin
 	// Tests require constant reconnecting and disconnecting client-broker
 	restart := true
 	for restart {
-		fmt.Println("aa")
 		l, err := net.Listen("tcp", brokerPort)
 		HandleError(err)
 		tmp, err := l.Accept()
@@ -43,7 +42,6 @@ func RunBroker(params Params, clientPort, brokerPort string, workerAddrs []strin
 		for err != nil {
 			client, err = rpc.Dial("tcp", clientAddr)
 		}
-		fmt.Println("LOG: aaa")
 
 		if BState == nil {
 			BState = &BrokerState{Stopper: stopper, Client: client, Workers: workers}
@@ -55,6 +53,7 @@ func RunBroker(params Params, clientPort, brokerPort string, workerAddrs []strin
 			BState.Suspend = false
 			BState.Terminate = false
 		}
+		fmt.Println("Broker initialised")
 		rpc.Register(BState)
 		go rpc.Accept(lis)
 

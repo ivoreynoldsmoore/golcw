@@ -37,7 +37,8 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 		CState.Events = events
 		CState.Params = params
 	}
-	fmt.Println("LOG: Create new ClientState")
+
+	fmt.Println("Client initialised")
 	rpc.Register(CState)
 	go rpc.Accept(lis)
 
@@ -66,9 +67,7 @@ func RunClient(params Params, clientPort, brokerAddr string, events chan Event, 
 	}()
 
 	var res1 BrokerRes
-	fmt.Println("LOG: Client sending request")
 	err = broker.Call(Broker, BrokerReq{InitialState: world, Params: params}, &res1)
-	fmt.Println("LOG: Got final state from broker!")
 	var signal struct{}
 	stopper <- signal
 
