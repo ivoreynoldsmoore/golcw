@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"uk.ac.bris.cs/gameoflife/gol"
+	"uk.ac.bris.cs/gameoflife/sdl"
 )
 
 // main is the function called when starting Game of Life with 'go run .'
@@ -97,9 +98,9 @@ func main() {
 	// Finally, each worker listens and broker connects to all of them.
 	if role == "client" {
 		go gol.RunClient(params, clientPort, BrokerAddr, events, keyPresses)
-		// sdl.Start(params, events, keyPresses)
-		for range events {
-		}
+		sdl.Start(params, events, keyPresses)
+		// for range events {
+		// }
 	} else if role == "broker" {
 		gol.RunBroker(params, clientPort, brokerPort, WorkerAddrs)
 	} else if role == "worker" {
