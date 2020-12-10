@@ -30,7 +30,7 @@ func main() {
 		&params.ImageWidth,
 		"w",
 		512,
-		"Specify the width of the image.")
+		"Specify the width of the hiimage.")
 
 	flag.IntVar(
 		&params.ImageHeight,
